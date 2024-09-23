@@ -11,11 +11,11 @@ public class SolanaController {
     @Autowired
     private SolanaService solanaService;
 
-    @GetMapping("/balance/{address}")
-    public ResponseEntity<String> getBalance(@PathVariable String address) {
-        String balance = solanaService.getBalance(address);
-        return ResponseEntity.ok(balance);
-    }
+//    @GetMapping("/balance/{address}")
+//    public ResponseEntity<String> getBalance(@PathVariable String address) {
+//        String balance = solanaService.getBalance(address);
+//        return ResponseEntity.ok(balance);
+//    }
     @GetMapping("/send")
     public String sendTransaction(@RequestParam String fromPrivateKey,
                                   @RequestParam String toPublicKey,

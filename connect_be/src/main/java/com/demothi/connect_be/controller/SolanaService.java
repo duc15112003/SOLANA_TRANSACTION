@@ -8,10 +8,13 @@ import org.p2p.solanaj.programs.SystemProgram;
 import org.p2p.solanaj.rpc.Cluster;
 import org.p2p.solanaj.rpc.RpcClient;
 import org.p2p.solanaj.rpc.RpcException;
+import org.p2p.solanaj.rpc.types.LatestBlockhash;
 import org.p2p.solanaj.rpc.types.RecentBlockhash;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 import static org.bouncycastle.asn1.x500.style.BCStyle.L;
 
@@ -39,16 +42,18 @@ public class SolanaService {
             // Tạo account từ private key
             byte[] fromPrivateKeyBytes = Base58.decode(fromPrivateKeyBase58);
             Account fromAccount = new Account(fromPrivateKeyBytes);
-            System.out.println(fromAccount.getPublicKey());
+            System.out.println("Sender Public Key: " + fromAccount.getPublicKey());
+
             // Tạo public key cho người nhận
             PublicKey toPublicKeyObj = new PublicKey(toPublicKey);
 
-            // Lấy recentBlockhash từ Solana RPC A
+            // Lấy recentBlockhash từ Solana RPC
+            LatestBlockhash latestBlockhash = rpcClient.getApi().getLatestBlockhash();
 
-            String recentBlockhash = rpcClient.getApi().getRecentBlockhash();
+            // Đúng cách lấy blockhash
 
             // Tạo instruction cho giao dịch
-            long lamport = (long) (amount * 1000000000);
+            long lamport = (long) (amount * 1000000000); // Chuyển SOL thành lamports (1 SOL = 1 tỷ lamports)
             Transaction transaction = new Transaction();
             transaction.addInstruction(
                     SystemProgram.transfer(
@@ -57,17 +62,17 @@ public class SolanaService {
                             lamport
                     )
             );
-            // Thiết lập recentBlockhash cho giao dịch
-            transaction.setRecentBlockHash(recentBlockhash);
-            // Ký transaction
-//            transaction.sign(fromAccount);
 
-            // Gửi transaction
-            String result = rpcClient.getApi().sendTransaction(transaction, fromAccount);
+            // Thiết lập recentBlockhash cho giao dịch
+//
+//            // Ký transaction
+            List<Account> signers = Arrays.asList(fromAccount);
+            String result = rpcClient.getApi().sendTransaction(transaction,signers,latestBlockhash.getValue().getBlockhash());
             return result;
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error: " + e.getMessage();
+            return "Error in RPC request: " + e.getMessage();
         }
     }
+
 }
